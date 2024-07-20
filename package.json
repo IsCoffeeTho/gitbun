@@ -1,0 +1,34 @@
+{
+	"name": "gitbun",
+	"version": "0.0.1",
+	"module": "index.ts",
+	"type": "module",
+	"scripts": {
+		"start": "bun run index.ts"
+	},
+	"devDependencies": {
+		"bun-types": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "^5.0.0"
+	},
+	"dependencies": {
+		"@types/ssh2": "^1.11.19",
+		"crypto": "^1.0.1",
+		"ssh2": "^1.15.0"
+	},
+	"keywords": [
+		"git",
+		"gitjs",
+		"gitbun",
+		"bun",
+		"web",
+		"ssh",
+		"ssh2",
+		"remote"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/IsCoffeeTho/gitbun"
+	}
+}
