@@ -2,7 +2,7 @@ import { test, expect } from "bun:test";
 import gitobj from "../src/porcelain/plumbing/gitobj";
 
 test("gitObject Basic Operation", () => {
-	var testObj = new gitobj("blob");
+	var testObj = new gitobj();
 	var dec = new TextDecoder();
 	expect(testObj.type).toBe(`blob`);
 	expect(testObj.value.toString()).toBe(``);
@@ -11,7 +11,7 @@ test("gitObject Basic Operation", () => {
 });
 
 test("gitObject hash", () => {
-	var obj = new gitobj("blob");
+	var obj = new gitobj();
 	var runHashTest = (text: string, hash: string) => {
 		obj.value = Buffer.from(text);
 		expect(obj.hash).toBe(hash);
@@ -25,26 +25,16 @@ test("gitObject hash", () => {
 
 test("gitObject compression", () => {
 	var dec = new TextDecoder();
-	var runCompressionTest = (type: string, value?: string) => {
-		if (value == undefined) {
-			value = type;
-			type = 'blob';
-		}
-		var obj = new gitobj(type);
+	var runCompressionTest = (value: string) => {
+		var obj = new gitobj();
 		obj.value = Buffer.from(value);
-		expect(dec.decode(Bun.inflateSync(obj.toFile().slice(2)))).toBe(`${type} ${value.length}\0${value}`);
+		expect(dec.decode(Bun.inflateSync(obj.toFile().slice(2)))).toBe(`blob ${value.length}\0${value}`);
 	}
 	runCompressionTest("");
 	runCompressionTest("\n");
 	runCompressionTest("test");
 	runCompressionTest("test\n");
 	runCompressionTest("\x01\x02\x03");
-
-	runCompressionTest("file", "");
-	runCompressionTest("file", "\n");
-	runCompressionTest("file", "test");
-	runCompressionTest("file", "test\n");
-	runCompressionTest("file", "\x01\x02\x03");
 });
 
 test("gitObject parsing", () => {
@@ -57,7 +47,7 @@ test("gitObject parsing", () => {
 		});
 		var objectHash = stdout.toString().slice(0, -1);
 		var hashPath = `${process.cwd()}/.git/objects/${objectHash.slice(0, 2)}/${objectHash.slice(2)}`;
-		var parsedObject = new gitobj("blob");
+		var parsedObject = new gitobj();
 		parsedObject.fromFile(hashPath);
 		expect(parsedObject.type).toBe('blob');
 		expect(parsedObject.value.toString()).toBe(value);

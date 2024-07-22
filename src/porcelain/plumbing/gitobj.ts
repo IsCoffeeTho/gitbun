@@ -4,12 +4,8 @@ import gitbun from "../../..";
 export default class gitobj implements gitbun.gitObject {
 	#hash: string = "";
 	#hash_: boolean = false;
-	#val: Buffer;
-	#type: string;
-	constructor(type: string) {
-		this.#type = <string>type;
-		this.#val = Buffer.from("");
-	}
+	#val: Buffer = Buffer.from("");
+	#type: string = "blob";
 
 	/** The value of the git object */
 	get value() { return this.#val; }
@@ -59,12 +55,10 @@ export default class gitobj implements gitbun.gitObject {
 			throw new Error("Git Object has invalid format");
 		var type = parsed[0];
 		switch (type) {
+			case "tag":
 			case "blob":
 			case "tree":
 			case "commit":
-			case "tag":
-				if (this.#type != type)
-					throw new TypeError(`Git Object is not the correct type ("${type}" != "${this.#type}")`);
 				break;
 			default:
 				throw new TypeError("Git Object has an invalid type");

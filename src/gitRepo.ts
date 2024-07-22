@@ -1,17 +1,15 @@
-import { statSync, existsSync, mkdirSync } from "fs";
-import gitTag from "./porcelain/plumbing/gitBranch";
+import { statSync, existsSync, mkdirSync, readFileSync, readdirSync } from "fs";
 import gitBranch from "./porcelain/plumbing/gitBranch";
 import gitobj from "./porcelain/plumbing/gitobj";
 
 export default class gitRepo {
-
-	defaultBranch: gitBranch;
+	branches: Map<string, gitBranch>;
 	#path: string;
 	#bare: boolean;
 	constructor(directory: string, bare: boolean = true) {
 		this.#bare = bare;
 		this.#path = directory;
-		if (existsSync(directory)) {
+		if (!existsSync(directory)) {
 			mkdirSync(directory);
 		} else {
 			var stat = statSync(directory);
@@ -24,24 +22,30 @@ export default class gitRepo {
 			}
 		}
 		this.branches = new Map<string, gitBranch>();
-		this.defaultBranch = new gitBranch(this);
+		this.#deserialize();
 	}
 
 	get path() { return this.#path; }
 	get dotGit() { if (this.#bare) return this.#path; return `${this.#path}/.git`; }
 
-	getBranch(name:string) {
-		
-		return this.#getObject(hash, "tag");
-	}
-
-	#getObject(hash: string, type: string) {
-		var ret = new gitobj(type);
+	getObject(hash: string) {
+		var ret = new gitobj();
 		ret.fromFile(`${this.dotGit}/objects/${hash.slice(0,2)}/${hash.slice(2)}`);
+		return ret
 	}
 
 	#deserialize() {
-
+		var branchRefs = `${this.dotGit}/refs/heads`;
+		if (!existsSync(branchRefs))
+			return null;
+		var branches = readdirSync(branchRefs);
+		branches.forEach((branch) => {
+			var hash = readFileSync(`${branchRefs}/${branch}`).toString().slice(0,40);
+			var obj = new gitBranch(this, hash);
+			obj.name = branch;
+			console.log(branch, hash, obj);
+			this.branches.set(branch, obj);
+		});
 	}
 
 	// store in file
@@ -52,4 +56,3 @@ export default class gitRepo {
 
 	}
 }
-

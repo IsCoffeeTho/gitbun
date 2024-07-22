@@ -39,6 +39,8 @@ declare namespace gitbun {
 		email: string
 	}
 
+	export type gitUserTimestamped = gitUser & {timestamp : Date}
+
 	export type gitPermissionContext = gitActionContext & {
 		allow(): void;
 		deny(): void;
