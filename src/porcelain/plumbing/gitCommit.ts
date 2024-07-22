@@ -58,7 +58,7 @@ export default class gitCommit {
 			if (line.startsWith("tree "))
 				this.#tree = new gitTree(this.#env, line.slice(5, 45));
 			if (line.startsWith("parent "))
-				this.#parent = new gitCommit(this.#env, this.#env.getObject(line.slice(7, 45)));
+				this.#parent = new gitCommit(this.#env, this.#env.getObject(line.slice(7, 47)));
 			if (line.startsWith("committer "))
 				this.#committer = gitUser.parseWithTimestamp(line.slice(10));
 			if (line.startsWith("author "))
