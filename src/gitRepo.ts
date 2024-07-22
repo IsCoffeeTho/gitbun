@@ -3,7 +3,7 @@ import gitBranch from "./porcelain/plumbing/gitBranch";
 import gitobj from "./porcelain/plumbing/gitobj";
 
 export default class gitRepo {
-	branches: Map<string, gitBranch>;
+	branches: {[_:string]: gitBranch};
 	#path: string;
 	#bare: boolean;
 	constructor(directory: string, bare: boolean = true) {
@@ -21,7 +21,7 @@ export default class gitRepo {
 				bare = false;
 			}
 		}
-		this.branches = new Map<string, gitBranch>();
+		this.branches = {};
 		this.#deserialize();
 	}
 
@@ -43,8 +43,7 @@ export default class gitRepo {
 			var hash = readFileSync(`${branchRefs}/${branch}`).toString().slice(0,40);
 			var obj = new gitBranch(this, hash);
 			obj.name = branch;
-			console.log(branch, hash, obj);
-			this.branches.set(branch, obj);
+			this.branches[branch] = obj;
 		});
 	}
 

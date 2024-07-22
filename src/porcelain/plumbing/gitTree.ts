@@ -42,11 +42,10 @@ export default class gitTree {
 				filename += String.fromCharCode(c ?? 0);
 			}
 			for (var i = 0; i < 20; i++) {
-				var c = objValue.at(0) ?? 0;
+				var c = objValue.at(0);
 				objValue = objValue.subarray(1);
-				hash += c.toString(16);
+				hash += (c ?? 0).toString(16).padStart(2, "00");
 			}
-			console.log(filemode, filename, hash);
 			var obj;
 			if (filemode.at(0) == '4')
 				obj = new gitTree(this.#env, hash);

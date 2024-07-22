@@ -4,9 +4,11 @@ import gitCommit from "./gitCommit";
 
 export default class gitBranch {
 	#name?: string;
-	HEAD: gitCommit;
+	#env : gitRepo;
+	#HEAD: gitCommit;
 	constructor(env: gitRepo, hash: string) {
-		this.HEAD = new gitCommit(env, env.getObject(hash));
+		this.#env = env;
+		this.#HEAD = new gitCommit(env, env.getObject(hash));
 	}
 
 	get name() { return this.#name; }
@@ -14,4 +16,6 @@ export default class gitBranch {
 		if (typeof this.#name != "string")
 			this.#name = v;
 	}
+	
+	get head() { return this.#HEAD; }
 }
