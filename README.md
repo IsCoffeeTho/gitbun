@@ -15,9 +15,9 @@ bun install gitbun
 ```
 
 ## Usage
-
+Here is a mini script to serve a basic git store:
 ```js
-// myGitService.js
+// myBasicGit.js
 
 import { gitService } from "gitbun";
 
@@ -28,6 +28,7 @@ const gitServer = new gitService({
 		port: 22,
 		hostkeys: [ "host_rsa.pub" ],
 		auth(ctx) {
+			// ctx.user will persist for the request
 			if (ctx.key == null) {
 				ctx.user = {
 					id: -1,

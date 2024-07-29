@@ -58,14 +58,21 @@ export default class gitSSH {
 			con.on("session", (acceptSession, rejectSession) => {
 				var session = acceptSession();
 				session.on("exec", (acceptExec, rejectExec, infoExec) => {
-					var command = infoExec.command.split(" ").filter((v) => {
-						return v != "";
-					})
-					if (["git-upload-pack", "git-recieve-pack"].indexOf(command[0]) == -1) {
+					var command = infoExec.command.split(" ").filter((v) => { return v != ""; })
+					var protocol = command.shift() ?? "";
+					var repoName = gitService.sanitizeRepoName(command.pop() ?? "");
+					if (["git-upload-pack", "git-recieve-pack"].indexOf(protocol) == -1) {
 						rejectExec();
 						return;
 					}
-					console.log(command);
+					var client = acceptExec();
+					try {
+						var repo = this.#env.getRepo(repoName);
+						
+					} catch (err: any) {
+						client.stderr.write(`gitbun: ${repoName}.git: ${(<Error>err).message}\n`);
+						client.close();
+					}
 				})
 			});
 

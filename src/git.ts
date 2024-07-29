@@ -18,22 +18,23 @@ export default class gitService extends EventEmitter {
 	}
 
 	createRepo(name: string): gitRepo {
-		name = gitService.sanitizeRepoName(name);
-		var retRepoDir = `${this.repoDir.pathname}${name}`;
-		if (existsSync(retRepoDir))
+		var dir = this.#dirOfRepo(name);
+		if (existsSync(dir))
 			throw new Error(`Repository Already Exists`);
-		mkdirSync(retRepoDir);
-		return new gitRepo(retRepoDir, true);
+		mkdirSync(dir, { recursive: true });
+		return new gitRepo(dir, true);
 	}
 
 	getRepo(name: string): gitRepo | null {
+		var dir = this.#dirOfRepo(name);
+		if (!existsSync(dir))
+			throw new Error(`Repository Doesn't exist`);
+		return new gitRepo(dir, true);
+	}
+
+	#dirOfRepo(name: string) {
 		name = gitService.sanitizeRepoName(name);
-		var retRepoDir = `${this.repoDir.pathname}${name}`;
-		try {
-			return new gitRepo(retRepoDir, true);
-		} catch (err) {
-			return null;
-		}
+		return `${this.repoDir.pathname}/${name}`;
 	}
 
 	begin(ready?: () => any) {
@@ -45,10 +46,10 @@ export default class gitService extends EventEmitter {
 
 	static sanitizeRepoName(name: string) {
 		if (name.startsWith("'") && name.endsWith("'"))
-			name = name.slice(1,-1);
+			name = name.slice(1, -1);
 		if (name.endsWith(".git"))
 			name = name.slice(0, -".git".length);
-		return pathToFileURL(`/${name}`).pathname;
+		return pathToFileURL(`/${name}`).pathname.slice(1);
 	}
 
 	static null: any;
