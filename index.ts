@@ -1,5 +1,6 @@
 import { PublicKey } from "ssh2";
 import gitService from "./src/git";
+import gitRepo from "./src/gitRepo";
 
 export default gitbun;
 export { gitService };
@@ -34,4 +35,11 @@ declare namespace gitbun {
 		accept(): any,
 		reject(): any
 	}
+
+	export type pullContext = {
+		readonly user: any;
+		readonly repo: gitRepo;
+		accept(): void;
+		reject(): void;
+	};
 }

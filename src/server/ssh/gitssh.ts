@@ -1,6 +1,7 @@
 import { AuthContext, PublicKeyAuthContext, Server } from "ssh2";
 import { readFileSync } from "fs";
 import gitbun, { gitService } from "../../..";
+import gitUploadPack from "./uploadPack";
 
 export default class gitSSH {
 	#server: Server;
@@ -38,7 +39,7 @@ export default class gitSSH {
 				opt.auth(auth_ctx);
 				user = auth_ctx.user;
 				var opsecTimer: Timer;
-				var opsecTimeout = 5 * 4;
+				var opsecTimeout = 5 * 10; // 5 seconds
 				opsecTimer = setInterval(() => {
 					if (--opsecTimeout <= 0) {
 						clearInterval(opsecTimer);
@@ -52,7 +53,7 @@ export default class gitSSH {
 					else
 						ctx.reject();
 					clearInterval(opsecTimer);
-				}, 250);
+				}, 100);
 			});
 
 			con.on("session", (acceptSession, rejectSession) => {
@@ -68,7 +69,23 @@ export default class gitSSH {
 					var client = acceptExec();
 					try {
 						var repo = this.#env.getRepo(repoName);
-						
+						if (!repo)
+							throw new Error("Repository is not found");
+						var decision: undefined | boolean;
+						if (!this.#env.emit((protocol == "git-upload-pack" ? "pull" : "push"), {
+							user: user,
+							repo: repo,
+							accept() {
+								decision = true;
+							},
+							reject() {
+								decision = false;
+							}
+						}) && decision == undefined)
+							throw new Error("Unhandled Permissions");
+						else if (!decision)
+							throw new Error("Permission Denied");
+						new gitUploadPack(repo, client);
 					} catch (err: any) {
 						client.stderr.write(`gitbun: ${repoName}.git: ${(<Error>err).message}\n`);
 						client.close();

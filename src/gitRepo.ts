@@ -4,6 +4,7 @@ import gitobj from "./porcelain/plumbing/gitobj";
 
 export default class gitRepo {
 	branches: { [_: string]: gitBranch };
+	defaultBranch?: gitBranch;
 	#path: string;
 	#bare: boolean;
 	constructor(directory: string, bare: boolean = true) {
@@ -24,6 +25,7 @@ export default class gitRepo {
 			bare = false;
 		}
 		this.branches = {};
+
 		this.#deserialize();
 	}
 
@@ -41,12 +43,15 @@ export default class gitRepo {
 		if (!existsSync(branchRefs))
 			return;
 		var branches = readdirSync(branchRefs);
-		branches.forEach((branch) => {
+		if (branches.length == 0) {
+			return;
+		}
+		for (var idx in branches) {
+			var branch = branches[idx];
 			var hash = readFileSync(`${branchRefs}/${branch}`).toString().slice(0, 40);
-			var obj = new gitBranch(this, hash);
-			obj.name = branch;
+			var obj = new gitBranch(this, hash, branch);
 			this.branches[branch] = obj;
-		});
+		}
 	}
 
 	// store in file

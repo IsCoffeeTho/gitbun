@@ -20,13 +20,18 @@ const app = new gitService({
 			// ctx.key.data : Buffer;
 			ctx.user = {
 				id: 0,
-				name: "anon-user",
+				name: "Known User",
 			};
 			ctx.accept(); // accept all
 			// ctx.reject();
 		}
 	}
 });
+
+app.on("pull", (ctx) => {
+	console.log(ctx);
+	ctx.reject();
+})
 
 console.log(`${app.repoDir.pathname}`);
 
