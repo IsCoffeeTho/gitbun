@@ -25,7 +25,6 @@ export default class gitRepo {
 			bare = false;
 		}
 		this.branches = {};
-
 		this.#deserialize();
 	}
 

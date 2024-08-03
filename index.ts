@@ -16,6 +16,7 @@ declare namespace gitbun {
 
 	export type gitServiceOptions = {
 		repoDir: string,
+		defaultBranch?: string,
 		ssh?: sshServerSettings
 	};
 
@@ -26,10 +27,10 @@ declare namespace gitbun {
 
 	export type sshServerSettings = serverSettings & {
 		hostkeys: string[],
-		auth(ctx:sshAuthCtx):any
+		auth(ctx:sshAuthContext):any
 	};
 
-	export type sshAuthCtx = {
+	export type sshAuthContext = {
 		user: any,
 		readonly key: PublicKey | null,
 		accept(): any,

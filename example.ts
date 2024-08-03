@@ -4,13 +4,13 @@ import { mkdtempSync } from "fs";
 const app = new gitService({
 	repoDir: mkdtempSync("/tmp/gitbun-test-root"),
 	ssh: {
-		host: process.env["SSH_HOST"] ?? "::",
+		host: process.env["SSH_HOST"] ?? "::1",
 		port: process.env["SSH_PORT"] ?? 2222,
 		hostkeys: (process.env["SSH_HOST_KEYS"])?.split(":") ?? [],
 		auth(ctx) {
 			if (ctx.key == null) {
 				ctx.user = {
-					id: -1,
+					id: 'f'.repeat(40),
 					username: 'Anonymus User'
 				}
 				ctx.accept();
@@ -19,7 +19,7 @@ const app = new gitService({
 			// ctx.key.algo : string;
 			// ctx.key.data : Buffer;
 			ctx.user = {
-				id: 0,
+				id: ''.padStart(40, "0"),
 				name: "Known User",
 			};
 			ctx.accept(); // accept all
@@ -29,9 +29,14 @@ const app = new gitService({
 });
 
 app.on("pull", (ctx) => {
+	console.log(ctx.repo);
+	ctx.accept();
+});
+
+app.on("push", (ctx) => {
 	console.log(ctx);
-	ctx.reject();
-})
+	ctx.accept();
+});
 
 console.log(`${app.repoDir.pathname}`);
 

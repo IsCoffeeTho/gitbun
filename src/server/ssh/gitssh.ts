@@ -2,20 +2,19 @@ import { AuthContext, PublicKeyAuthContext, Server } from "ssh2";
 import { readFileSync } from "fs";
 import gitbun, { gitService } from "../../..";
 import gitUploadPack from "./uploadPack";
+import gitSSHagent from "./sshagent";
 
 export default class gitSSH {
 	#server: Server;
 	#host: string;
 	#port: number;
-	#env: gitService;
 	constructor(env: gitService, opt: gitbun.sshServerSettings) {
-		this.#env = env;
 		this.#server = new Server({
 			hostKeys: opt.hostkeys.map((v) => {
 				return readFileSync(v);
 			})
 		}, (con) => {
-			var user: any;
+			var agent = new gitSSHagent(env, con);
 			con.on("authentication", (ctx: AuthContext) => {
 				if (ctx.username != "git")
 					return ctx.reject(["publickey", "none"]);
@@ -23,7 +22,7 @@ export default class gitSSH {
 					return ctx.reject(["publickey", "none"]);
 				var decisionMade = false;
 				var decision = false;
-				var auth_ctx: gitbun.sshAuthCtx = {
+				var auth_ctx: gitbun.sshAuthContext = {
 					user: {},
 					key: ((ctx.method != "none") ? (<PublicKeyAuthContext>ctx).key : null),
 					accept() {
@@ -37,13 +36,15 @@ export default class gitSSH {
 					}
 				}
 				opt.auth(auth_ctx);
-				user = auth_ctx.user;
+				agent.user = auth_ctx.user;
 				var opsecTimer: Timer;
-				var opsecTimeout = 5 * 10; // 5 seconds
+				var opsecTimeout = 3000;
 				opsecTimer = setInterval(() => {
-					if (--opsecTimeout <= 0) {
+					opsecTimeout -= 100;
+					if (opsecTimeout <= 0) {
 						clearInterval(opsecTimer);
-						console.error(new Error("Authentication timeout"));
+						ctx.reject();
+						console.error("Authentication timeout");
 						return;
 					}
 					if (!decisionMade)
@@ -55,44 +56,6 @@ export default class gitSSH {
 					clearInterval(opsecTimer);
 				}, 100);
 			});
-
-			con.on("session", (acceptSession, rejectSession) => {
-				var session = acceptSession();
-				session.on("exec", (acceptExec, rejectExec, infoExec) => {
-					var command = infoExec.command.split(" ").filter((v) => { return v != ""; })
-					var protocol = command.shift() ?? "";
-					var repoName = gitService.sanitizeRepoName(command.pop() ?? "");
-					if (["git-upload-pack", "git-recieve-pack"].indexOf(protocol) == -1) {
-						rejectExec();
-						return;
-					}
-					var client = acceptExec();
-					try {
-						var repo = this.#env.getRepo(repoName);
-						if (!repo)
-							throw new Error("Repository is not found");
-						var decision: undefined | boolean;
-						if (!this.#env.emit((protocol == "git-upload-pack" ? "pull" : "push"), {
-							user: user,
-							repo: repo,
-							accept() {
-								decision = true;
-							},
-							reject() {
-								decision = false;
-							}
-						}) && decision == undefined)
-							throw new Error("Unhandled Permissions");
-						else if (!decision)
-							throw new Error("Permission Denied");
-						new gitUploadPack(repo, client);
-					} catch (err: any) {
-						client.stderr.write(`gitbun: ${repoName}.git: ${(<Error>err).message}\n`);
-						client.close();
-					}
-				})
-			});
-
 		});
 		this.#host = opt.host;
 		if (typeof opt.port == "string")

@@ -9,12 +9,16 @@ export default class gitService extends EventEmitter {
 	repoDir: URL;
 	#opt: gitbun.gitServiceOptions;
 	#sshServer?: gitSSH;
+	#defaultBranchName: string;
 	constructor(opt: gitbun.gitServiceOptions) {
 		super();
 		this.#opt = opt;
 		this.repoDir = pathToFileURL(opt.repoDir);
 		if (opt.ssh)
 			this.#sshServer = new gitSSH(this, opt.ssh);
+		if (!opt.defaultBranch)
+			opt.defaultBranch = "master";
+		this.#defaultBranchName = opt.defaultBranch;
 	}
 
 	createRepo(name: string): gitRepo {
@@ -22,7 +26,9 @@ export default class gitService extends EventEmitter {
 		if (existsSync(dir))
 			throw new Error(`Repository Already Exists`);
 		mkdirSync(dir, { recursive: true });
-		return new gitRepo(dir, true);
+		var ret = new gitRepo(dir, true);
+		
+		return ret;
 	}
 
 	getRepo(name: string): gitRepo | null {

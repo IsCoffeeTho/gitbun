@@ -1,7 +1,7 @@
 import { readFileSync } from "fs";
-import gitbun from "../../..";
+import gitbun from "../../../.";
 
-export default class gitobj implements gitbun.gitObject {
+export default class gitobj {
 	#hash: string = "";
 	#hash_: boolean = false;
 	#val: Buffer = Buffer.from("");

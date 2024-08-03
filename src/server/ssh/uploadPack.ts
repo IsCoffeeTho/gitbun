@@ -9,8 +9,8 @@ export default class gitUploadPack {
 		this.#repo = repo;
 		this.#con = new packProtocol(con);
 		if (!repo.defaultBranch) {
-			this.#con.pktline(`${'0'.repeat(40)}`);
 			this.#con.flush();
+			this.#con.close();
 		}
 		for (var name in repo.branches) {
 			var branch = repo.branches[name];
